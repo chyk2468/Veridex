@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 class RelationshipType(str, Enum):
     CORROBORATED = "CORROBORATED"
     CONTRADICTED = "CONTRADICTED"
+    LIKELY_CONTRADICTION = "LIKELY_CONTRADICTION"
     CONTEXTUAL_DIFFERENCE = "CONTEXTUAL_DIFFERENCE"
     RELATED_BUT_DIFFERENT = "RELATED_BUT_DIFFERENT"
     UNCERTAIN = "UNCERTAIN"
@@ -24,9 +25,13 @@ class ComparisonFeatures(BaseModel):
     period_match: str = "UNKNOWN"        # "EXACT", "OVERLAPPING", "DIFFERENT", "UNKNOWN"
     scope_match: str = "UNKNOWN"         # "EXACT", "DIFFERENT", "UNKNOWN"
     unit_match: bool = False
-    value_match: str = "UNKNOWN"         # "AGREES", "DISAGREES", "TOLERANCE_MATCH", "SEMANTIC_EQUAL", "N/A"
+    value_match: str = "UNKNOWN"         # "EXACT_MATCH", "ROUNDING_VARIANCE", "MATERIAL_DIFFERENCE", "NOT_COMPARABLE", "SEMANTIC_EQUAL", "AGREES", "DISAGREES", "TOLERANCE_MATCH"
+    numeric_variance_type: Optional[str] = None  # "EXACT_MATCH", "ROUNDING_VARIANCE", "MATERIAL_DIFFERENCE", "NOT_COMPARABLE"
     value_diff_percent: Optional[float] = None
+    value_diff_absolute: Optional[float] = None
+    estimate_match: str = "EXACT"        # "EXACT", "DIVERGENT", "UNKNOWN" (e.g. advance estimate vs projection)
     source_independence: bool = False    # True if from distinct documents
+    upstream_source_match: Optional[bool] = None  # True if both cite identical upstream source
 
 class Relationship(BaseModel):
     relationship_id: str

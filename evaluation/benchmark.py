@@ -38,6 +38,12 @@ class BenchmarkRunner:
                 unit=fa_raw["unit"],
                 period=Normalizer.normalize_period(fa_raw["period"]) if fa_raw["period"] else None,
                 business_scope=fa_raw["business_scope"],
+                qualifiers=fa_raw.get("qualifiers", []),
+                estimate_status=fa_raw.get("estimate_status"),
+                publication_date=fa_raw.get("publication_date"),
+                data_vintage=fa_raw.get("data_vintage"),
+                revision_status=fa_raw.get("revision_status"),
+                upstream_source=fa_raw.get("upstream_source"),
                 raw_text=f"{fa_raw['subject']} {fa_raw['predicate']} {fa_raw['value']}",
                 evidence_id=f"ev_{item['id']}_a",
                 document_id=fa_raw["doc"],
@@ -56,6 +62,12 @@ class BenchmarkRunner:
                 unit=fb_raw["unit"],
                 period=Normalizer.normalize_period(fb_raw["period"]) if fb_raw["period"] else None,
                 business_scope=fb_raw["business_scope"],
+                qualifiers=fb_raw.get("qualifiers", []),
+                estimate_status=fb_raw.get("estimate_status"),
+                publication_date=fb_raw.get("publication_date"),
+                data_vintage=fb_raw.get("data_vintage"),
+                revision_status=fb_raw.get("revision_status"),
+                upstream_source=fb_raw.get("upstream_source"),
                 raw_text=f"{fb_raw['subject']} {fb_raw['predicate']} {fb_raw['value']}",
                 evidence_id=f"ev_{item['id']}_b",
                 document_id=fb_raw["doc"],
@@ -121,3 +133,29 @@ class BenchmarkRunner:
             status = "PASS" if d["match"] else "FAIL"
             detail_rows.append([d["id"], d["subject"][:18], d["predicate"][:22], d["ground_truth"], d["predicted"], status])
         print(tabulate(detail_rows, headers=["Test ID", "Subject", "Predicate", "Ground Truth", "Predicted", "Result"], tablefmt="grid"))
+
+def run_benchmark() -> Dict[str, Any]:
+    """Convenience function returning dictionary summary of benchmark run."""
+    runner = BenchmarkRunner()
+    res = runner.run()
+    metrics = res["metrics"]
+    details = res["details"]
+    return {
+        "total_samples": metrics["total_samples"],
+        "accuracy": metrics["accuracy"],
+        "macro_f1": metrics["macro_f1"],
+        "false_contradiction_rate": metrics["false_contradiction_rate"],
+        "per_class_metrics": metrics["per_class"],
+        "results": [
+            {
+                "id": d["id"],
+                "ground_truth": d["ground_truth"],
+                "predicted": d["predicted"],
+                "status": "PASS" if d["match"] else "FAIL",
+                "confidence": 0.95,
+                "notes": d["notes"]
+            }
+            for d in details
+        ]
+    }
+

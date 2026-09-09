@@ -108,43 +108,57 @@ EVALUATION_BENCHMARK = [
     },
 
     # =========================================================================
-    # 2. CONTRADICTIONS (Materially conflicting claims for same context)
+    # 2. CONTRADICTIONS & ESTIMATE DIVERGENCES
     # =========================================================================
     {
         "id": "contrad_01",
-        "category": "CONTRADICTED",
+        "category": "LIKELY_CONTRADICTION",
         "fact_a": {
             "subject": "India", "predicate": "real GDP growth",
             "value": 6.4, "unit": "%", "canonical_value": 6.4, "canonical_unit": "percent",
             "period": "FY2024/25", "business_scope": None,
+            "estimate_status": "advance_estimate",
+            "publication_date": "July 2024",
+            "upstream_source": "Ministry of Finance (Economic Survey)",
             "doc": "01-india-economic-survey-2024-25-excerpt.pdf", "page": 4
         },
         "fact_b": {
             "subject": "India", "predicate": "real GDP growth",
             "value": 6.5, "unit": "%", "canonical_value": 6.5, "canonical_unit": "percent",
             "period": "FY2024/25", "business_scope": None,
+            "estimate_status": "projection",
+            "publication_date": "January 2025",
+            "upstream_source": "IMF Staff Consultations",
             "doc": "03-imf-india-2025-article-iv-excerpt.pdf", "page": 10
         },
-        "expected_relationship": "CONTRADICTED",
-        "notes": "Economic Survey reports 6.4% for FY25 while IMF reports 6.5% for FY2024/25."
+        "expected_relationship": "LIKELY_CONTRADICTION",
+        "notes": "Economic Survey reports 6.4% as July 2024 advance estimate while IMF projects 6.5% in January 2025. Divergence is classified as LIKELY_CONTRADICTION due to estimation vintage."
     },
     {
         "id": "contrad_02",
-        "category": "CONTRADICTED",
+        "category": "LIKELY_CONTRADICTION",
         "fact_a": {
             "subject": "India", "predicate": "real GDP growth",
             "value": 6.5, "unit": "%", "canonical_value": 6.5, "canonical_unit": "percent",
             "period": "FY2025/26", "business_scope": None,
+            "estimate_status": "projection",
+            "publication_date": "May 2024",
+            "qualifiers": ["RBI baseline projection"],
+            "upstream_source": "RBI Monetary Policy Department",
             "doc": "02-rbi-annual-report-2024-25-excerpt.pdf", "page": 17
         },
         "fact_b": {
             "subject": "India", "predicate": "real GDP growth",
             "value": 6.6, "unit": "%", "canonical_value": 6.6, "canonical_unit": "percent",
             "period": "FY2025/26", "business_scope": None,
+            "estimate_status": "projection",
+            "publication_date": "January 2025",
+            "qualifiers": ["IMF Article IV staff baseline"],
+            "upstream_source": "IMF Mission Staff",
             "doc": "03-imf-india-2025-article-iv-excerpt.pdf", "page": 13
         },
-        "expected_relationship": "CONTRADICTED",
-        "notes": "RBI projects 6.5% for FY2025/26 while IMF projects 6.6%."
+        "expected_relationship": "LIKELY_CONTRADICTION",
+        "notes": "RBI projects 6.5% for FY2025/26 (May 2024 baseline) while IMF projects 6.6% (January 2025 baseline). Vintage and model differences make this a LIKELY_CONTRADICTION."
     },
     {
         "id": "contrad_03",
@@ -153,16 +167,18 @@ EVALUATION_BENCHMARK = [
             "subject": "Delhivery Limited", "predicate": "pin codes covered",
             "value": 18793, "unit": "pin codes", "canonical_value": 18793, "canonical_unit": "pin codes",
             "period": "FY2023-24", "business_scope": None,
+            "estimate_status": "actual",
             "doc": "02-delhivery-annual-report-fy24-excerpt.pdf", "page": 22
         },
         "fact_b": {
             "subject": "Delhivery Limited", "predicate": "pin codes covered",
             "value": 18792, "unit": "pin codes", "canonical_value": 18792, "canonical_unit": "pin codes",
             "period": "FY2023-24", "business_scope": None,
+            "estimate_status": "actual",
             "doc": "03-delhivery-q4-fy24-earnings-presentation.pdf", "page": 8
         },
         "expected_relationship": "CONTRADICTED",
-        "notes": "Statutory report states 18,793 pin codes while presentation states 18,792 for the same period."
+        "notes": "Statutory report states 18,793 pin codes while presentation states 18,792 for the same FY24 period. Discrete count disagreement constitutes an un-reconciled CONTRADICTION."
     },
 
     # =========================================================================

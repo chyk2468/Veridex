@@ -127,6 +127,15 @@ CUSTOM_CSS = """
         font-weight: 600;
         font-size: 0.8rem;
     }
+    .badge-likely {
+        background: rgba(249, 115, 22, 0.15);
+        color: #fb923c;
+        border: 1px solid #f97316;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
     .badge-context {
         background: rgba(245, 158, 11, 0.15);
         color: #fbbf24;
@@ -190,10 +199,11 @@ def get_db_stats():
         ev_c = db.query(EvidenceORM).count()
         corrob_c = db.query(RelationshipORM).filter(RelationshipORM.relationship_type == "CORROBORATED").count()
         contrad_c = db.query(RelationshipORM).filter(RelationshipORM.relationship_type == "CONTRADICTED").count()
+        likely_c = db.query(RelationshipORM).filter(RelationshipORM.relationship_type == "LIKELY_CONTRADICTION").count()
         context_c = db.query(RelationshipORM).filter(RelationshipORM.relationship_type == "CONTEXTUAL_DIFFERENCE").count()
         return {
             "docs": doc_c, "facts": fact_c, "relationships": rel_c, "evidence": ev_c,
-            "corroborations": corrob_c, "contradictions": contrad_c, "contextual": context_c
+            "corroborations": corrob_c, "contradictions": contrad_c, "likely_contradictions": likely_c, "contextual": context_c
         }
     finally:
         db.close()
@@ -336,10 +346,10 @@ with tab_cases:
         st.info("**Grounded Explanation:** Delhivery Limited's revenue from operations for FY2023-24 reported as ₹8,142 Cr in the Earnings Presentation corresponds to ₹81,420 million. This agrees with ₹81,415.38 million in the Annual Report within a rounding variance of 0.0057% (under the 1.0% tolerance threshold). Both figures reflect consolidated operations over identical 12-month periods.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Case 2: Genuine Contradiction
+    # Case 2: Macroeconomic Estimate Divergence & Contradiction
     st.markdown("---")
-    st.markdown("#### 2. Genuine Macroeconomic Contradiction")
-    st.markdown("**Core Discovery:** India Real GDP Growth for FY2024/25: 6.4% in Economic Survey vs 6.5% in IMF Article IV Consultation.")
+    st.markdown("#### 2. Macroeconomic Estimate Divergence / Likely Contradiction")
+    st.markdown("**Core Discovery:** India Real GDP Growth for FY2024/25: 6.4% in Economic Survey (July 2024 advance estimate) vs 6.5% in IMF Article IV (January 2025 projection).")
     c2 = next((c for c in dataset if c["id"] == "contrad_01"), None)
     if c2:
         col_c2a, col_c2b = st.columns(2)
@@ -349,8 +359,8 @@ with tab_cases:
             st.markdown(f"**Subject:** `{c2['fact_a']['subject']}`")
             st.markdown(f"**Predicate:** `{c2['fact_a']['predicate']}`")
             st.markdown(f"**Raw Value:** `{c2['fact_a']['value']}%`")
-            st.markdown(f"**Canonical Value:** `{c2['fact_a']['canonical_value']}%`")
-            st.markdown(f"**Period:** `{c2['fact_a']['period']}` | **Scope:** `Domestic/National`")
+            st.markdown(f"**Estimate Status:** `advance_estimate` | **Published:** `July 2024`")
+            st.markdown(f"**Period:** `{c2['fact_a']['period']}` | **Upstream:** `{c2['fact_a'].get('upstream_source', 'Ministry of Finance')}`")
             st.markdown(f"**Citation:** `{c2['fact_a']['doc']}` (Page {c2['fact_a']['page']})")
             st.markdown(f'<div class="evidence-box">"Real GDP is estimated to grow by 6.4 per cent in FY25."</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -361,8 +371,8 @@ with tab_cases:
             st.markdown(f"**Subject:** `{c2['fact_b']['subject']}`")
             st.markdown(f"**Predicate:** `{c2['fact_b']['predicate']}`")
             st.markdown(f"**Raw Value:** `{c2['fact_b']['value']}%`")
-            st.markdown(f"**Canonical Value:** `{c2['fact_b']['canonical_value']}%`")
-            st.markdown(f"**Period:** `{c2['fact_b']['period']}` | **Scope:** `International/Sovereign`")
+            st.markdown(f"**Estimate Status:** `projection` | **Published:** `January 2025`")
+            st.markdown(f"**Period:** `{c2['fact_b']['period']}` | **Upstream:** `{c2['fact_b'].get('upstream_source', 'IMF Staff Consultations')}`")
             st.markdown(f"**Citation:** `{c2['fact_b']['doc']}` (Page {c2['fact_b']['page']})")
             st.markdown(f'<div class="evidence-box">"India’s growth is projected at 6.5 percent in FY2024/25."</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -374,13 +384,18 @@ with tab_cases:
             '<span class="feature-tag tag-true">Predicate Match: TRUE (real GDP growth)</span> '
             '<span class="feature-tag tag-info">Period Match: EXACT (FY2024/25)</span> '
             '<span class="feature-tag tag-info">Scope Match: EXACT</span> '
-            '<span class="feature-tag tag-false">Value Match: DISAGREES (Diff: 1.54% > 1.0%)</span> '
+            '<span class="feature-tag tag-false">Value Match: MATERIAL_DIFFERENCE (Diff: 1.54% > 1.0%)</span> '
+            '<span class="feature-tag tag-false">Estimate Match: DIVERGENT (Advance Estimate vs Projection)</span> '
             '<span class="feature-tag tag-info">Source Independence: TRUE</span>',
             unsafe_allow_html=True
         )
-        st.markdown(f"<br>**Relationship Decision:** <span class='badge-contrad'>CONTRADICTED</span> (Confidence: 0.96)", unsafe_allow_html=True)
-        st.error("**Grounded Explanation:** Direct macroeconomic contradiction for India real GDP growth during FY2024/25. The Economic Survey estimates 6.4%, while the IMF projects 6.5%. Both sources refer to the exact same country, metric, and fiscal period, but report conflicting economic estimates exceeding allowable tolerance.")
+        st.markdown(f"<br>**Relationship Decision:** <span class='badge-likely'>LIKELY_CONTRADICTION</span> (Confidence: 0.95)", unsafe_allow_html=True)
+        st.warning("**Grounded Explanation:** The Economic Survey reports 6.4% as a July 2024 advance estimate, while the IMF Article IV staff reports 6.5% as a January 2025 economic projection. Because both figures describe real GDP growth for the same FY2024/25 period but differ in release vintage and forecasting methodology, this is classified as a LIKELY_CONTRADICTION rather than an un-reconcilable factual dispute.")
         st.markdown('</div>', unsafe_allow_html=True)
+
+    # Secondary Hard Contradiction Example: Discrete Integer Counting Unit
+    st.markdown("##### 📌 Hard Factual Contradiction (Discrete Integer Counts):")
+    st.caption("Delhivery Limited Pin Codes Covered: 18,793 (Annual Report Page 22) vs 18,792 (Earnings Presentation Page 8) for FY24. Zero-tolerance discrete integer check enforces un-reconciled **CONTRADICTED**.")
 
     # Case 3: Contextual Difference
     st.markdown("---")
@@ -513,7 +528,7 @@ with tab_relationships:
     fact_repo = FactRepository(db)
     ev_repo = EvidenceRepository(db)
 
-    r_filter = st.selectbox("Filter by Relationship Type", ["ALL", "CORROBORATED", "CONTRADICTED", "CONTEXTUAL_DIFFERENCE", "UNCERTAIN"])
+    r_filter = st.selectbox("Filter by Relationship Type", ["ALL", "CORROBORATED", "CONTRADICTED", "LIKELY_CONTRADICTION", "CONTEXTUAL_DIFFERENCE", "UNCERTAIN"])
     
     if r_filter == "ALL":
         all_rels = rel_repo.get_all()
@@ -531,6 +546,7 @@ with tab_relationships:
         badge_class = (
             "badge-corrob" if rel.relationship_type == RelationshipType.CORROBORATED
             else "badge-contrad" if rel.relationship_type == RelationshipType.CONTRADICTED
+            else "badge-likely" if rel.relationship_type == RelationshipType.LIKELY_CONTRADICTION
             else "badge-context" if rel.relationship_type == RelationshipType.CONTEXTUAL_DIFFERENCE
             else "badge-uncertain"
         )

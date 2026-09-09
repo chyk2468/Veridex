@@ -10,13 +10,20 @@ class EvaluationMetrics:
 
     @staticmethod
     def calculate(ground_truth: List[str], predictions: List[str]) -> Dict[str, Any]:
-        categories = ["CORROBORATED", "CONTRADICTED", "CONTEXTUAL_DIFFERENCE", "UNCERTAIN", "RELATED_BUT_DIFFERENT"]
+        categories = [
+            "CORROBORATED",
+            "CONTRADICTED",
+            "LIKELY_CONTRADICTION",
+            "CONTEXTUAL_DIFFERENCE",
+            "UNCERTAIN",
+            "RELATED_BUT_DIFFERENT"
+        ]
         
         per_class = {}
         total = len(ground_truth)
         correct = 0
 
-        # False contradiction tracking
+        # False contradiction tracking: predicting any contradiction (genuine or likely) when truth is non-contradiction
         false_contradictions = 0
         total_non_contradictions_truth = 0
 
@@ -39,9 +46,9 @@ class EvaluationMetrics:
         for gt, pr in zip(ground_truth, predictions):
             if gt == pr:
                 correct += 1
-            if gt != "CONTRADICTED":
+            if gt not in ("CONTRADICTED", "LIKELY_CONTRADICTION"):
                 total_non_contradictions_truth += 1
-                if pr == "CONTRADICTED":
+                if pr in ("CONTRADICTED", "LIKELY_CONTRADICTION"):
                     false_contradictions += 1
 
         accuracy = correct / total if total > 0 else 0.0
@@ -49,9 +56,10 @@ class EvaluationMetrics:
             false_contradictions / total_non_contradictions_truth if total_non_contradictions_truth > 0 else 0.0
         )
 
-        macro_p = sum(per_class[c]["precision"] for c in categories) / len(categories)
-        macro_r = sum(per_class[c]["recall"] for c in categories) / len(categories)
-        macro_f1 = sum(per_class[c]["f1"] for c in categories) / len(categories)
+        active_categories = [c for c in categories if per_class[c]["support"] > 0]
+        macro_p = sum(per_class[c]["precision"] for c in active_categories) / len(active_categories) if active_categories else 0.0
+        macro_r = sum(per_class[c]["recall"] for c in active_categories) / len(active_categories) if active_categories else 0.0
+        macro_f1 = sum(per_class[c]["f1"] for c in active_categories) / len(active_categories) if active_categories else 0.0
 
         return {
             "accuracy": round(accuracy, 4),

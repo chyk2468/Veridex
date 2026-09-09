@@ -67,10 +67,12 @@ class VectorStore:
         logger.info(f"Indexed {len(facts)} facts. Total in index: {len(self.fact_ids)}.")
 
     def search(self, query: str, top_k: int = 10, threshold: float = 0.50) -> List[Tuple[str, float]]:
-        """
-        Query index and return (fact_id, similarity_score).
-        """
-        if not self.fact_ids or self.vectors is None or len(self.vectors) == 0:
+        """Query index and return (fact_id, similarity_score)."""
+        if not self.fact_ids:
+            return []
+        if not self.use_faiss and (self.vectors is None or len(self.vectors) == 0):
+            return []
+        if self.use_faiss and (self.index is None or self.index.ntotal == 0):
             return []
 
         query_emb = self.embedder.encode(query)

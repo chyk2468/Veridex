@@ -29,7 +29,7 @@ from storage.repositories import (
 )
 from models.document import Document
 from models.fact import Fact
-from models.relationship import Relationship
+from models.relationship import Relationship, RelationshipType
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ class FactKnowledgePipeline:
         for fact_a, fact_b in candidate_pairs:
             rel = self.engine.evaluate_pair(fact_a, fact_b)
             # Only retain meaningful relationships
-            if rel.relationship_type != "RELATED_BUT_DIFFERENT" or rel.confidence >= 0.8:
+            if rel.relationship_type != RelationshipType.RELATED_BUT_DIFFERENT or rel.confidence >= 0.8:
                 self.explainer.explain(rel, fact_a, fact_b)
                 new_relationships.append(rel)
 

@@ -38,7 +38,7 @@ def test_cases_endpoint():
     assert "case_3_contextual_difference" in data
     assert "case_4_failure_analysis" in data
     assert data["case_1_corroboration"]["data"]["expected_relationship"] == "CORROBORATED"
-    assert data["case_2_contradiction"]["data"]["expected_relationship"] == "CONTRADICTED"
+    assert data["case_2_contradiction"]["data"]["expected_relationship"] == "LIKELY_CONTRADICTION"
 
 def test_statistics_endpoint():
     res = client.get("/statistics")

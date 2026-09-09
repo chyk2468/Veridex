@@ -48,6 +48,13 @@ class Fact(BaseModel):
     category: Optional[str] = "general"      # "financial", "operational", "macroeconomic", "governance"
     qualifiers: List[str] = Field(default_factory=list)  # e.g., ["pro forma", "adjusted", "advance estimates"]
     
+    # Estimation, Vintage, & Provenance context
+    estimate_status: Optional[str] = None     # "actual", "projection", "advance_estimate", "revised"
+    publication_date: Optional[str] = None    # e.g., "2024-07-22", "July 2024"
+    data_vintage: Optional[str] = None        # e.g., "first_advance_estimate", "provisional_actual"
+    revision_status: Optional[str] = None     # e.g., "unrevised", "revised"
+    upstream_source: Optional[str] = None     # e.g., "MoSPI", "Directorate General of Foreign Trade", "Internal Financial Statements"
+    
     # Grounding & Traceability
     raw_text: str
     confidence: float = 1.0

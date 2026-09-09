@@ -14,10 +14,13 @@ This report documents the rigorous evaluation of the **Fact Knowledge Layer** ag
 
 | Metric | Score | Industry Benchmark / Target | Status |
 |---|---|---|---|
-| **Overall Classification Accuracy** | **100.00%** | $\ge 85.0\%$ | **EXCEEDED** |
-| **Macro F1 Score** | **100.00%** | $\ge 80.0\%$ | **EXCEEDED** |
-| **FALSE CONTRADICTION RATE (FCR)** | **0.00%** | $\le 5.0\%$ | **PERFECT** |
+| **Overall Classification Accuracy** | **100.00%** | $\ge 85.0\%$ | **OBSERVED** |
+| **Macro F1 Score** | **100.00%** | $\ge 80.0\%$ | **OBSERVED** |
+| **FALSE CONTRADICTION RATE (FCR)** | **0.00%** | $\le 5.0\%$ | **OBSERVED** |
 | **Total Test Samples Evaluated** | 18 | $\ge 15$ | **VERIFIED** |
+
+> [!NOTE]
+> On our 18-sample manually verified benchmark, the current relationship classifier achieved 100.00% classification accuracy, 100.00% macro F1, and a 0.00% false contradiction rate. These results describe performance on the local manually verified benchmark and are not presented as a guarantee of performance on arbitrary documents.
 
 > [!IMPORTANT]
 > **Why False Contradiction Rate (FCR) is the Critical Metric:**
@@ -30,7 +33,8 @@ This report documents the rigorous evaluation of the **Fact Knowledge Layer** ag
 | Relationship Category | Ground Truth Support | Predicted | Precision | Recall | F1 Score |
 |---|---|---|---|---|---|
 | **CORROBORATED** | 7 | 7 | 100.0% | 100.0% | 100.0% |
-| **CONTRADICTED** | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| **CONTRADICTED** | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| **LIKELY_CONTRADICTION** | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | **CONTEXTUAL_DIFFERENCE** | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | **UNCERTAIN** | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | **RELATED_BUT_DIFFERENT** | 1 | 1 | 100.0% | 100.0% | 100.0% |
@@ -51,8 +55,8 @@ Every sample in the benchmark was tested using `python scripts/evaluate.py`:
 | `corrob_05` | India | foreign exchange reserves | CORROBORATED | CORROBORATED | 0.97 | **PASS** |
 | `corrob_06` | Delhivery Limited | corporate office address | CORROBORATED | CORROBORATED | 0.95 | **PASS** |
 | `corrob_07` | Delhivery Limited | compliance officer identity | CORROBORATED | CORROBORATED | 0.95 | **PASS** |
-| `contrad_01`| India | real GDP growth (FY25) | CONTRADICTED | CONTRADICTED | 0.96 | **PASS** |
-| `contrad_02`| India | real GDP growth (FY24) | CONTRADICTED | CONTRADICTED | 0.96 | **PASS** |
+| `contrad_01`| India | real GDP growth (FY25) | LIKELY_CONTRADICTION | LIKELY_CONTRADICTION | 0.95 | **PASS** |
+| `contrad_02`| India | real GDP growth (FY26) | LIKELY_CONTRADICTION | LIKELY_CONTRADICTION | 0.95 | **PASS** |
 | `contrad_03`| Delhivery Limited | pin codes covered (18,793 vs 18,792) | CONTRADICTED | CONTRADICTED | 0.98 | **PASS** |
 | `context_01`| Delhivery Limited | standalone vs consolidated revenue | CONTEXTUAL_DIFFERENCE | CONTEXTUAL_DIFFERENCE | 0.95 | **PASS** |
 | `context_02`| Delhivery Limited | Q4 FY24 vs Full Year FY24 revenue | CONTEXTUAL_DIFFERENCE | CONTEXTUAL_DIFFERENCE | 0.96 | **PASS** |

@@ -109,3 +109,48 @@ def test_uncertain_missing_period(engine):
 
     rel = engine.evaluate_pair(fact_unknown, fact_known)
     assert rel.relationship_type == RelationshipType.UNCERTAIN
+
+def test_likely_contradiction_estimate_divergence(engine):
+    fact_advance = Fact(
+        fact_id="f_adv", subject="India", predicate="real GDP growth",
+        object_value=6.4, canonical_value=6.4, canonical_unit="percent", value_type="percentage",
+        period=Period(label="FY2024/25", start_date="2024-04-01", end_date="2025-03-31"),
+        estimate_status="advance_estimate", publication_date="July 2024",
+        raw_text="Advance estimate of GDP growth: 6.4%",
+        evidence_id="ev_adv", document_id="doc_es", page_number=4
+    )
+    fact_proj = Fact(
+        fact_id="f_proj", subject="India", predicate="real GDP growth",
+        object_value=6.5, canonical_value=6.5, canonical_unit="percent", value_type="percentage",
+        period=Period(label="FY2024/25", start_date="2024-04-01", end_date="2025-03-31"),
+        estimate_status="projection", publication_date="January 2025",
+        raw_text="IMF projection for GDP growth: 6.5%",
+        evidence_id="ev_proj", document_id="doc_imf", page_number=10
+    )
+
+    rel = engine.evaluate_pair(fact_advance, fact_proj)
+    assert rel.relationship_type == RelationshipType.LIKELY_CONTRADICTION
+    assert rel.comparison_features["estimate_match"] == "DIVERGENT"
+
+def test_discrete_count_tolerance_rejection(engine):
+    # Discrete unit "pin codes" should not tolerate 0.0053% difference
+    fact_a = Fact(
+        fact_id="f_pc1", subject="Delhivery Limited", predicate="pin codes covered",
+        object_value=18793, canonical_value=18793, canonical_unit="pin codes", value_type="numeric",
+        period=Period(label="FY2023/24", start_date="2023-04-01", end_date="2024-03-31"),
+        raw_text="Covered 18,793 pin codes",
+        evidence_id="ev_1", document_id="doc_ar", page_number=22
+    )
+    fact_b = Fact(
+        fact_id="f_pc2", subject="Delhivery Limited", predicate="pin codes covered",
+        object_value=18792, canonical_value=18792, canonical_unit="pin codes", value_type="numeric",
+        period=Period(label="FY2023/24", start_date="2023-04-01", end_date="2024-03-31"),
+        raw_text="Covered 18,792 pin codes",
+        evidence_id="ev_2", document_id="doc_pr", page_number=8
+    )
+
+    rel = engine.evaluate_pair(fact_a, fact_b)
+    assert rel.relationship_type == RelationshipType.CONTRADICTED
+    assert rel.comparison_features["numeric_variance_type"] == "MATERIAL_DIFFERENCE"
+    assert rel.comparison_features["value_diff_absolute"] == 1.0
+
