@@ -22,6 +22,7 @@ ENV/
 *.sqlite3
 *.faiss
 *.index
+*.meta.json
 
 # Uploads and temporary data
 data/uploads/*
