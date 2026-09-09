@@ -1,0 +1,36 @@
+# Environment and secrets
+.env
+*.env.local
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Databases and Vector Stores
+*.db
+*.sqlite3
+*.faiss
+*.index
+
+# Uploads and temporary data
+data/uploads/*
+!data/uploads/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# IDE and OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
