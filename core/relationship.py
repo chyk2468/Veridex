@@ -241,3 +241,11 @@ class RelationshipEngine:
             evidence_a_id=fact_a.evidence_id,
             evidence_b_id=fact_b.evidence_id
         )
+
+    def compare_facts(self, fact_a: Fact, fact_b: Fact) -> Tuple[str, ComparisonFeatures, float]:
+        """Convenience method returning (rel_type_str, features, confidence)."""
+        features = self.extract_features(fact_a, fact_b)
+        rel_type, conf, breakdown = self.classify_relationship(features, fact_a, fact_b)
+        val = rel_type.value if hasattr(rel_type, "value") else str(rel_type)
+        return val, features, conf
+

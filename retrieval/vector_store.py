@@ -125,3 +125,18 @@ class VectorStore:
                 logger.info(f"Loaded FAISS index from {self.index_path} with {self.index.ntotal} vectors.")
         except Exception as e:
             logger.warning(f"Could not load existing vector store: {e}. Starting fresh.")
+
+    def reset(self):
+        """Clear all indexed vectors and metadata."""
+        self.fact_ids = []
+        self.vectors = None
+        self._init_index()
+        try:
+            if os.path.exists(self.index_path):
+                os.remove(self.index_path)
+            if os.path.exists(self.meta_path):
+                os.remove(self.meta_path)
+            logger.info("VectorStore reset successfully.")
+        except Exception as e:
+            logger.warning(f"Could not remove old vector store files: {e}")
+

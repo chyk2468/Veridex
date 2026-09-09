@@ -36,6 +36,11 @@ if not exist data mkdir data
 if not exist data\uploads mkdir data\uploads
 if not exist data\processed mkdir data\processed
 
+if not exist data\facts.db (
+    echo [INFO] First run detected: Seeding starter knowledge base from assignment datasets...
+    "%PYTHON_EXE%" scripts\seed_starter_knowledge.py
+)
+
 :: 4. Free up ports 8000 and 8501 if previously occupied by background instances
 echo [1/3] Checking and clearing port conflicts on 8000 and 8501...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":8000" ^| findstr "LISTENING"') do (

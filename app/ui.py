@@ -277,6 +277,17 @@ with st.sidebar:
             else:
                 st.warning(f"File not found: {target_path}")
 
+        st.markdown("---")
+        st.markdown("### ⚡ Fast Knowledge Base Seeding")
+        if st.button("📥 Populate Starter Facts (1-Click)", type="primary", use_container_width=True):
+            with st.spinner("Seeding verified facts, grounding evidence, and relationships..."):
+                from storage.seeder import seed_starter_knowledge
+                res = seed_starter_knowledge(reset=True)
+                st.success(f"Indexed {res.get('facts')} facts & {res.get('relationships')} relationships across {res.get('documents')} documents!")
+                time.sleep(1)
+                st.rerun()
+
+
 # -----------------------------------------------------------------------------
 # MAIN VIEW: TABS
 # -----------------------------------------------------------------------------
@@ -476,38 +487,85 @@ with tab_explorer:
     fact_repo = FactRepository(db)
     ev_repo = EvidenceRepository(db)
 
-    if query_text:
-        search_results = pipeline.vector_store.search(query_text, top_k=10)
-        st.markdown(f"**Found {len(search_results)} relevant facts:**")
+    all_facts_in_db = fact_repo.get_all()
+    total_facts_count = len(all_facts_in_db)
+
+    if total_facts_count == 0:
+        st.warning("⚠️ **Knowledge Base is currently empty.** Click below to index all starter dataset facts:")
+        if st.button("🚀 Load Starter Knowledge Base (Delhivery & Macroeconomy)", type="primary"):
+            with st.spinner("Seeding verified facts, grounding evidence, and relationships..."):
+                from storage.seeder import seed_starter_knowledge
+                res = seed_starter_knowledge(reset=True)
+                st.success(f"Indexed {res.get('facts')} facts across {res.get('documents')} documents!")
+                time.sleep(1)
+                st.rerun()
+    elif query_text.strip():
+        # 1. FAISS Semantic Search
+        search_results = pipeline.vector_store.search(query_text, top_k=15, threshold=0.35)
+        matched_facts = []
+        seen_fact_ids = set()
+
         for f_id, sim in search_results:
             fact = fact_repo.get_by_id(f_id)
-            if fact:
+            if fact and fact.fact_id not in seen_fact_ids:
+                if scope_filter != "All" and (fact.business_scope or "").lower() != scope_filter.lower():
+                    continue
+                matched_facts.append((fact, sim))
+                seen_fact_ids.add(fact.fact_id)
+
+        # 2. Keyword / Substring Fallback if vector search returned few matches
+        if len(matched_facts) < 4:
+            query_tokens = [w.lower() for w in query_text.split() if len(w) > 2]
+            for f in all_facts_in_db:
+                if f.fact_id in seen_fact_ids:
+                    continue
+                if scope_filter != "All" and (f.business_scope or "").lower() != scope_filter.lower():
+                    continue
+                fact_str = f"{f.subject} {f.predicate} {f.object_value} {f.unit or ''} {f.period.label if f.period else ''} {f.raw_text}".lower()
+                matches = sum(1 for tok in query_tokens if tok in fact_str)
+                if matches >= max(1, len(query_tokens) // 2):
+                    score = 0.50 + (matches / len(query_tokens)) * 0.40 if query_tokens else 0.50
+                    matched_facts.append((f, score))
+                    seen_fact_ids.add(f.fact_id)
+
+        matched_facts.sort(key=lambda x: x[1], reverse=True)
+
+        if matched_facts:
+            st.markdown(f"**Found {len(matched_facts)} relevant facts:**")
+            for fact, sim in matched_facts:
                 ev = ev_repo.get_by_id(fact.evidence_id) if fact.evidence_id else None
                 with st.container():
                     st.markdown(f"#### {fact.subject} — `{fact.predicate}`")
                     c_val, c_info = st.columns([1, 2])
                     with c_val:
                         st.markdown(f"**Value:** `{fact.object_value} {fact.unit or ''}`")
-                        st.markdown(f"**Canonical:** `{fact.canonical_value:,.2f if isinstance(fact.canonical_value, (int, float)) else fact.canonical_value} {fact.canonical_unit or ''}`")
+                        canon_str = f"{fact.canonical_value:,.2f}" if isinstance(fact.canonical_value, (int, float)) else str(fact.canonical_value or 'N/A')
+                        st.markdown(f"**Canonical:** `{canon_str} {fact.canonical_unit or ''}`")
                         st.markdown(f"**Period:** `{fact.period.label if fact.period else 'N/A'}`")
                     with c_info:
                         st.markdown(f"**Document:** `{fact.document_name}` (Page {fact.page_number})")
-                        st.markdown(f"**Scope:** `{fact.business_scope or 'N/A'}` | **Similarity:** `{sim:.4f}`")
+                        st.markdown(f"**Scope:** `{fact.business_scope or 'N/A'}` | **Match Score:** `{sim:.4f}`")
                         if ev:
                             st.markdown(f'<div class="evidence-box">"{ev.text[:250]}..."</div>', unsafe_allow_html=True)
                     st.markdown("---")
+        else:
+            st.info(f"No indexed facts found matching '{query_text}'. Try adjusting your query or scope filter.")
     else:
-        facts = fact_repo.get_all()
-        if facts:
-            st.markdown(f"**Total Indexed Facts: {len(facts)}**")
+        facts_to_display = all_facts_in_db
+        if scope_filter != "All":
+            facts_to_display = [f for f in all_facts_in_db if (f.business_scope or "").lower() == scope_filter.lower()]
+
+        if facts_to_display:
+            st.markdown(f"**Total Indexed Facts: {len(facts_to_display)}**")
             table_data = []
-            for f in facts[:50]:
+            for f in facts_to_display[:50]:
+                canon_display = f"{f.canonical_value:,.2f}" if isinstance(f.canonical_value, (int, float)) else str(f.canonical_value or 'N/A')
                 table_data.append({
                     "Subject": f.subject,
                     "Predicate": f.predicate,
                     "Raw Value": f"{f.object_value} {f.unit or ''}",
-                    "Canonical Value": f.canonical_value,
-                    "Unit": f.canonical_unit,
+                    "Canonical Value": canon_display,
+                    "Unit": f.canonical_unit or "",
                     "Period": f.period.label if f.period else "N/A",
                     "Scope": f.business_scope or "N/A",
                     "Doc": f.document_name,
@@ -515,7 +573,7 @@ with tab_explorer:
                 })
             st.dataframe(pd.DataFrame(table_data), use_container_width=True)
         else:
-            st.info("No facts indexed yet. Ingest starter PDFs or upload a document using the sidebar to begin.")
+            st.info("No facts match the selected scope filter.")
     db.close()
 
 # -----------------------------------------------------------------------------
