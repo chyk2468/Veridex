@@ -29,7 +29,7 @@ from storage.repositories import (
 )
 from models.relationship import RelationshipType
 from evaluation.dataset import get_benchmark_dataset, FAILURE_ANALYSIS_CASES
-from evaluation.metrics import compute_metrics
+from evaluation.metrics import EvaluationMetrics, compute_metrics
 
 # Page configuration
 st.set_page_config(

@@ -70,3 +70,6 @@ class EvaluationMetrics:
             "total_samples": total,
             "per_class": per_class
         }
+
+compute_metrics = EvaluationMetrics.calculate
+
