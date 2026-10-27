@@ -3,6 +3,8 @@
 > **Superjoin VIT 2026 Engineering Intern Hiring Assignment Submission**  
 > *A Generalized, Explainable Fact Knowledge Layer for Grounded Cross-Document Fact Intelligence.*
 
+![Veridex fact knowledge workflow](docs/readme-architecture.svg)
+
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB.svg?logo=python)](https://www.python.org/)
 [![Tests Passing](https://img.shields.io/badge/Pytest-24%20Passed%20(100%25)-10B981.svg)](https://docs.pytest.org/)
 [![Benchmark Accuracy](https://img.shields.io/badge/Benchmark%20Accuracy-100.00%25%20(18%20Samples)-10B981.svg)](docs/EVALUATION.md)
